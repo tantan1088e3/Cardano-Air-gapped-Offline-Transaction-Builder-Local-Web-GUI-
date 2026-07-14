@@ -6,6 +6,7 @@ Tại Web (Online/Local): Bạn nhập các thông số, công cụ tạo ra câ
 Tại máy Offline (CLI): Bạn copy câu lệnh đó, dán vào Terminal trên máy tính đã cài cardano-cli và chứa khóa bí mật để thực thi.
 
 📋 Hướng dẫn thực thi
+
 Bước 1: Soạn lệnh trên Web Tool
 Truy cập [Link Online] hoặc mở Tool-Cardano.html.
 
