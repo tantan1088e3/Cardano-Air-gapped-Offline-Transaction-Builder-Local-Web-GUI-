@@ -7,12 +7,11 @@ Tại máy Offline (CLI): Bạn copy câu lệnh đó, dán vào Terminal trên 
 
 📋 Hướng dẫn thực thi
 
-Bước 1: Soạn lệnh trên Web Tool
-Truy cập mở Tool-Cardano.html.
+Bước 1: Truy cập mở Tool-Cardano.html
 
 Nhập các thông tin: Blockfrost Project ID,Địa chỉ ví CỦA BẠN, UTXO nguồn, địa chỉ ví nhận, số tiền.
 
-Nhấn "Generate CLI Command". Một đoạn code CLI sẽ xuất hiện.
+Nhấn "Tạo Lệnh Build-Raw". Một đoạn code CLI sẽ xuất hiện.
 
 Copy đoạn code đó.
 
