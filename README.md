@@ -5,3 +5,5 @@ Cardano (ADA): addr1q8myf69ztrw89fpv0l6tmgjt2p8kt59xygu0w30nv6rcpdfay2qfwe8zk0ve
 ![Mô tả ảnh](qr.png)
 
 Every contribution helps keep this project updated, secure, and free for everyone.
+
+[Tải xuống file tại đây](Tool-Cardano.html)
