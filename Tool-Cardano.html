@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Siêu Tool Cardano v2.5 (Tích hợp Checkbox UTXO)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f7f6; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: white; background: #0033ad; padding: 15px; border-radius: 5px; margin-top: 0; }
+        h3 { color: #e94560; border-bottom: 2px solid #e94560; padding-bottom: 5px; margin-top: 40px; }
+        label { font-weight: bold; margin-top: 15px; display: block; color: #333; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f0f0f0; padding: 10px; text-align: left; }
+        td { padding: 5px; text-align: center; } /* Căn giữa checkbox */
+        td:nth-child(2), td:nth-child(3) { text-align: left; } /* Căn trái ô hash và số dư */
+        input[type="text"], input[type="number"], input[type="file"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-family: monospace; }
+        input[type="checkbox"] { transform: scale(1.5); cursor: pointer; } /* Phóng to checkbox cho dễ bấm */
+        input[readonly] { background-color: #e9ecef; color: #495057; cursor: not-allowed; }
+        
+        .btn-scan { background: #ff9900; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; margin-top: 10px; font-weight: bold; width: 100%; }
+        .btn-build { margin-top: 25px; width: 100%; padding: 12px; background: #0033ad; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-submit { margin-top: 25px; width: 100%; padding: 15px; background: #e94560; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        
+        textarea.code-output { width: 100%; height: 140px; margin-top: 20px; padding: 15px; font-family: Consolas, monospace; background-color: #1e1e1e; color: #00ff00; border-radius: 5px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🛠️ SIÊU TOOL CARDANO CLI v2.5 (CHỌN UTXO)</h2>
+        
+        <label style="color: #e94560;">🔑 Blockfrost Project ID (Dùng chung cho Quét và Khai hỏa):</label>
+        <input type="text" id="projectId" value="">
+
+        <label>1. Địa chỉ ví CỦA BẠN (Ví chứa tiền):</label>
+        <input type="text" id="myAddress" placeholder="Nhập addr1... của ông vào đây">
+        <button class="btn-scan" onclick="autoFetchUTXO()">📡 Quét Blockchain bằng Blockfrost</button>
+        
+        <table id="utxoTable">
+            <tr>
+                <th style="width: 10%; text-align: center;">Chọn</th> <!-- Thêm cột checkbox -->
+                <th>Mã UTXO (TxHash#Index)</th>
+                <th>Số ADA</th>
+            </tr>
+        </table>
+        
+        <label>2. Địa chỉ ví NGƯỜI NHẬN:</label>
+        <input type="text" id="receiver" placeholder="addr1...">
+        
+        <label>3. Số ADA muốn GỬI đi:</label>
+        <input type="number" id="sendAda" step="any" placeholder="VD: 1">
+        
+        <button class="btn-build" onclick="generateCommand()">Tạo Lệnh Build-Raw</button>
+        <textarea class="code-output" id="outputBuild" readonly placeholder="Lệnh CLI sẽ hiện ở đây..."></textarea>
+
+        <h3>🚀 TÊN LỬA SUBMIT - KÝ XONG UP FILE VÀO ĐÂY</h3>
+        <input type="file" id="fileInput" accept=".signed,.json,.txt" style="margin-top: 10px;">
+        <button class="btn-submit" id="submitBtn" onclick="submitToBlockfrost()">Khai Hỏa (Submit API)</button>
+        <textarea class="code-output" id="outputSubmit" readonly placeholder="Kết quả submit sẽ báo tại đây..."></textarea>
+    </div>
+
+    <script>
+        // --- CHỨC NĂNG QUÉT BẰNG BLOCKFROST ---
+        async function autoFetchUTXO() {
+            const myAddress = document.getElementById('myAddress').value.trim();
+            const projectId = document.getElementById('projectId').value.trim();
+            const outputBox = document.getElementById('outputBuild');
+            
+            if (!projectId) { alert("⚠️ Ông chưa nhập Blockfrost Project ID!"); return; }
+            if (!myAddress) { alert("⚠️ Ông chưa nhập địa chỉ ví của mình!"); return; }
+
+            outputBox.value = "⏳ Đang kết nối tới Blockfrost API để quét UTXO... Vui lòng đợi...";
+
+            try {
+                const response = await fetch(`https://cardano-mainnet.blockfrost.io/api/v0/addresses/${myAddress}/utxos`, {
+                    method: "GET",
+                    headers: { "project_id": projectId }
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`Blockfrost từ chối (Mã ${response.status}): ${errText}`);
+                }
+
+                const utxos = await response.json();
+
+                let table = document.getElementById("utxoTable");
+                while (table.rows.length > 1) { table.deleteRow(1); }
+
+                if (utxos.length === 0) {
+                    outputBox.value = "❌ Ví này đang rỗng tuếch hoặc mạng lưới chưa ghi nhận giao dịch nào!";
+                    return;
+                }
+
+                let totalAda = 0;
+
+                utxos.forEach(utxo => {
+                    let row = table.insertRow(-1);
+                    
+                    // Thêm Checkbox
+                    let checkboxInput = `<input type="checkbox" class="utxo-checkbox" checked>`;
+                    
+                    let hashInput = `<input type="text" class="utxo-hash" value="${utxo.tx_hash}#${utxo.output_index}" readonly>`;
+                    
+                    let lovelaceVal = utxo.amount.find(a => a.unit === "lovelace").quantity;
+                    let adaValue = (parseInt(lovelaceVal) / 1000000).toString();
+                    let adaInput = `<input type="number" class="utxo-ada" value="${adaValue}" readonly>`;
+
+                    // Chèn dữ liệu vào 3 cột
+                    row.insertCell(0).innerHTML = checkboxInput;
+                    row.insertCell(1).innerHTML = hashInput;
+                    row.insertCell(2).innerHTML = adaInput;
+                    
+                    totalAda += parseFloat(adaValue);
+                });
+
+                outputBox.value = `✅ Quét thành công!\n- Tìm thấy: ${utxos.length} UTXO\n- Tổng tài sản trong ví: ${totalAda.toFixed(6)} ADA\n\n👉 Hãy TÍCH CHỌN UTXO ông muốn dùng, sau đó nhập số lượng gửi và địa chỉ người nhận.`;
+
+            } catch (error) {
+                outputBox.value = "❌ LỖI: " + error.message;
+            }
+        }
+
+        // --- TẠO LỆNH ---
+        function generateCommand() {
+            let checkboxes = document.getElementsByClassName('utxo-checkbox'); // Lấy danh sách checkbox
+            let hashes = document.getElementsByClassName('utxo-hash');
+            let adas = document.getElementsByClassName('utxo-ada');
+            let txInString = '';
+            let totalLovelace = 0;
+
+            for (let i = 0; i < hashes.length; i++) {
+                // CHỈ XỬ LÝ NHỮNG UTXO NÀO ĐƯỢC TÍCH CHỌN (CHECKED)
+                if (checkboxes[i].checked) {
+                    let h = hashes[i].value.trim();
+                    let a = parseFloat(adas[i].value);
+                    if (h && !isNaN(a)) {
+                        txInString += `--tx-in ${h} `;
+                        totalLovelace += Math.round(a * 1000000);
+                    }
+                }
+            }
+
+            if (totalLovelace === 0) {
+                document.getElementById('outputBuild').value = "❌ Ông chưa chọn UTXO nào hoặc bảng UTXO đang trống!";
+                return;
+            }
+
+            const receiver = document.getElementById('receiver').value.trim();
+            const sendAda = parseFloat(document.getElementById('sendAda').value);
+            const myAddress = document.getElementById('myAddress').value.trim();
+            
+            if (!receiver || isNaN(sendAda)) {
+                document.getElementById('outputBuild').value = "❌ Thiếu thông tin người nhận hoặc số tiền!";
+                return;
+            }
+
+            const feeLovelace = 170000;
+            const sendLovelace = Math.round(sendAda * 1000000);
+            const changeLovelace = totalLovelace - sendLovelace - feeLovelace;
+
+            if (changeLovelace < 0) {
+                document.getElementById('outputBuild').value = `❌ LỖI: UTXO đã chọn không đủ tiền!\nTổng tiền trong các UTXO đã chọn: ${(totalLovelace/1000000).toFixed(6)} ADA\nCần gửi + Phí: ${((sendLovelace+feeLovelace)/1000000).toFixed(6)} ADA`;
+                return;
+            }
+
+            const cmd = `cardano-cli latest transaction build-raw ${txInString}--tx-out ${receiver}+${sendLovelace} --tx-out ${myAddress}+${changeLovelace} --fee ${feeLovelace} --out-file tx.raw`;
+            document.getElementById('outputBuild').value = `# Đã tính toán tự động dựa trên UTXO được chọn:\n# Tổng nguồn tiền (Input): ${(totalLovelace/1000000).toFixed(6)} ADA\n# Tiền thối lại ví (Change): ${(changeLovelace/1000000).toFixed(6)} ADA\n\n` + cmd;
+        }
+
+        // --- TÊN LỬA SUBMIT ---
+        function hexToBytes(hex) {
+            let bytes = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+            return bytes;
+        }
+
+        async function submitToBlockfrost() {
+            const projectId = document.getElementById('projectId').value.trim();
+            const file = document.getElementById('fileInput').files[0];
+            const outputBox = document.getElementById('outputSubmit');
+
+            if (!projectId) { alert("⚠️ Chưa có Blockfrost Project ID!"); return; }
+            if (!file) { alert("⚠️ Chưa tải file tx.signed lên!"); return; }
+            
+            outputBox.value = "🚀 Đang đánh lửa... Đẩy giao dịch lên Blockchain...";
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const binaryData = hexToBytes(JSON.parse(e.target.result).cborHex);
+                    const response = await fetch("https://cardano-mainnet.blockfrost.io/api/v0/tx/submit", {
+                        method: "POST", 
+                        headers: { "project_id": projectId, "Content-Type": "application/cbor" }, 
+                        body: binaryData
+                    });
+                    
+                    const resultText = await response.text();
+                    if (response.ok) {
+                        outputBox.value = `🎯 THÀNH CÔNG! Mã giao dịch của ông là:\n${resultText.replace(/"/g, '')}\n\nÔng có thể copy mã này dán lên Cardanoscan để kiểm tra.`;
+                    } else {
+                        outputBox.value = `❌ BỊ TỪ CHỐI:\n${resultText}`;
+                    }
+                } catch (err) {
+                    outputBox.value = "❌ Lỗi đọc file hoặc gửi dữ liệu: " + err.message;
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
