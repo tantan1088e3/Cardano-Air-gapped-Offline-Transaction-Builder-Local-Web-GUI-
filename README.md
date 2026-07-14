@@ -7,7 +7,7 @@ Tại máy Offline (CLI): Bạn copy câu lệnh đó, dán vào Terminal trên 
 
 📋 Hướng dẫn thực thi
 
-Bước 1: Truy cập mở Tool-Cardano.html
+Bước 1: Tải file Tool-Cardano.html về máy cá nhân - > Truy cập mở Tool-Cardano.html
 
 Nhập các thông tin: Blockfrost Project ID,Địa chỉ ví CỦA BẠN, UTXO nguồn, địa chỉ ví nhận, số tiền.
 
