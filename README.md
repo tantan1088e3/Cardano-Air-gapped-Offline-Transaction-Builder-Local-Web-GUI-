@@ -45,6 +45,34 @@ Tải file tx.signed (file chứa chữ ký bạn vừa tạo ở Bước 2) lê
 
 Nhấn "Submit/Broadcast Transaction". Công cụ sẽ sử dụng Blockfrost API để đẩy giao dịch đã ký của bạn trực tiếp lên mạng lưới Cardano.
 
+🔑 Hướng dẫn lấy Blockfrost Project ID
+Để công cụ có thể truy xuất dữ liệu UTXO và gửi giao dịch, bạn cần một Project ID từ Blockfrost. Đây là dịch vụ cung cấp hạ tầng dữ liệu cho Cardano.
+
+Các bước thực hiện:
+
+Đăng ký tài khoản:
+
+Truy cập: https://blockfrost.io/
+
+Nhấn "Sign Up" và tạo tài khoản (bằng Email hoặc GitHub).
+
+Tạo Project mới:
+
+Sau khi đăng nhập, tại trang Dashboard, nhấn nút "Create project".
+
+Chọn mạng lưới: Mainnet (Để thực hiện giao dịch thực tế) hoặc Preprod/Preview (Nếu bạn chỉ muốn test thử).
+
+Sao chép Project ID:
+
+Sau khi tạo xong, một bảng thông tin sẽ hiện ra.
+
+Tại phần "Project ID", bạn sẽ thấy một chuỗi ký tự dài. Hãy Copy toàn bộ chuỗi đó.
+
+Sử dụng trong Tool:
+
+Quay lại công cụ Cardano Transaction Bridge của bạn.
+
+Dán chuỗi đã copy vào ô "Blockfrost Project ID".
 
 If you find this tool helpful for securing your Cardano assets, consider supporting the development:
 
