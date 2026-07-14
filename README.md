@@ -1,16 +1,16 @@
 🏗️ Nguyên lý hoạt động
 Công cụ này đóng vai trò là một "Trợ lý soạn thảo lệnh CLI". Thay vì phải tự tính toán UTXO, phí giao dịch (Fee) và tiền thừa (Change), công cụ này sẽ tự động soạn thảo đoạn mã cardano-cli hoàn chỉnh cho bạn.
 
-Tại Web (Online/Local): Bạn nhập các thông số, công cụ tạo ra câu lệnh cardano-cli build-raw tương ứng.
+Tại Web (Local): Bạn nhập các thông số, công cụ tạo ra câu lệnh cardano-cli build-raw tương ứng.
 
 Tại máy Offline (CLI): Bạn copy câu lệnh đó, dán vào Terminal trên máy tính đã cài cardano-cli và chứa khóa bí mật để thực thi.
 
 📋 Hướng dẫn thực thi
 
 Bước 1: Soạn lệnh trên Web Tool
-Truy cập [Link Online] hoặc mở Tool-Cardano.html.
+Truy cập mở Tool-Cardano.html.
 
-Nhập các thông tin: UTXO nguồn, địa chỉ ví nhận, số tiền.
+Nhập các thông tin: Blockfrost Project ID,Địa chỉ ví CỦA BẠN, UTXO nguồn, địa chỉ ví nhận, số tiền.
 
 Nhấn "Generate CLI Command". Một đoạn code CLI sẽ xuất hiện.
 
