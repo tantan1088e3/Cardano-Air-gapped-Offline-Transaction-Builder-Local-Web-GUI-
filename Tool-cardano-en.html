@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cardano Super Tool v2.5 (UTXO Checkbox Integrated)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f7f6; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: white; background: #0033ad; padding: 15px; border-radius: 5px; margin-top: 0; }
+        h3 { color: #e94560; border-bottom: 2px solid #e94560; padding-bottom: 5px; margin-top: 40px; }
+        label { font-weight: bold; margin-top: 15px; display: block; color: #333; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f0f0f0; padding: 10px; text-align: left; }
+        td { padding: 5px; text-align: center; } /* Center checkbox */
+        td:nth-child(2), td:nth-child(3) { text-align: left; } /* Left align hash and balance */
+        input[type="text"], input[type="number"], input[type="file"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-family: monospace; }
+        input[type="checkbox"] { transform: scale(1.5); cursor: pointer; } /* Enlarge checkbox for easy clicking */
+        input[readonly] { background-color: #e9ecef; color: #495057; cursor: not-allowed; }
+        
+        .btn-scan { background: #ff9900; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; margin-top: 10px; font-weight: bold; width: 100%; }
+        .btn-build { margin-top: 25px; width: 100%; padding: 12px; background: #0033ad; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-submit { margin-top: 25px; width: 100%; padding: 15px; background: #e94560; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        
+        textarea.code-output { width: 100%; height: 140px; margin-top: 20px; padding: 15px; font-family: Consolas, monospace; background-color: #1e1e1e; color: #00ff00; border-radius: 5px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🛠️ CARDANO CLI SUPER TOOL v2.5 (SELECT UTXO)</h2>
+        
+        <label style="color: #e94560;">🔑 Blockfrost Project ID (Used for both Scan and Submit):</label>
+        <input type="text" id="projectId" value="">
+
+        <label>1. YOUR Wallet Address (Sender):</label>
+        <input type="text" id="myAddress" placeholder="Enter your addr1... here">
+        <button class="btn-scan" onclick="autoFetchUTXO()">📡 Scan Blockchain with Blockfrost</button>
+        
+        <table id="utxoTable">
+            <tr>
+                <th style="width: 10%; text-align: center;">Select</th> <!-- Added checkbox column -->
+                <th>UTXO Hash (TxHash#Index)</th>
+                <th>Amount (ADA)</th>
+            </tr>
+        </table>
+        
+        <label>2. RECEIVER Wallet Address:</label>
+        <input type="text" id="receiver" placeholder="addr1...">
+        
+        <label>3. Amount to SEND (ADA):</label>
+        <input type="number" id="sendAda" step="any" placeholder="Ex: 1">
+        
+        <button class="btn-build" onclick="generateCommand()">Generate Build-Raw Command</button>
+        <textarea class="code-output" id="outputBuild" readonly placeholder="CLI Command will appear here..."></textarea>
+
+        <h3>🚀 SUBMIT ROCKET - UPLOAD SIGNED FILE HERE</h3>
+        <input type="file" id="fileInput" accept=".signed,.json,.txt" style="margin-top: 10px;">
+        <button class="btn-submit" id="submitBtn" onclick="submitToBlockfrost()">Ignition (Submit API)</button>
+        <textarea class="code-output" id="outputSubmit" readonly placeholder="Submit result will be displayed here..."></textarea>
+    </div>
+
+    <script>
+        // --- BLOCKFROST SCAN FUNCTION ---
+        async function autoFetchUTXO() {
+            const myAddress = document.getElementById('myAddress').value.trim();
+            const projectId = document.getElementById('projectId').value.trim();
+            const outputBox = document.getElementById('outputBuild');
+            
+            if (!projectId) { alert("⚠️ You have not entered the Blockfrost Project ID!"); return; }
+            if (!myAddress) { alert("⚠️ You have not entered your wallet address!"); return; }
+
+            outputBox.value = "⏳ Connecting to Blockfrost API to fetch UTXOs... Please wait...";
+
+            try {
+                const response = await fetch(`https://cardano-mainnet.blockfrost.io/api/v0/addresses/${myAddress}/utxos`, {
+                    method: "GET",
+                    headers: { "project_id": projectId }
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`Blockfrost rejected (Code ${response.status}): ${errText}`);
+                }
+
+                const utxos = await response.json();
+
+                let table = document.getElementById("utxoTable");
+                while (table.rows.length > 1) { table.deleteRow(1); }
+
+                if (utxos.length === 0) {
+                    outputBox.value = "❌ This wallet is empty or the network hasn't recorded any transactions yet!";
+                    return;
+                }
+
+                let totalAda = 0;
+
+                utxos.forEach(utxo => {
+                    let row = table.insertRow(-1);
+                    
+                    // Add Checkbox
+                    let checkboxInput = `<input type="checkbox" class="utxo-checkbox" checked>`;
+                    
+                    let hashInput = `<input type="text" class="utxo-hash" value="${utxo.tx_hash}#${utxo.output_index}" readonly>`;
+                    
+                    let lovelaceVal = utxo.amount.find(a => a.unit === "lovelace").quantity;
+                    let adaValue = (parseInt(lovelaceVal) / 1000000).toString();
+                    let adaInput = `<input type="number" class="utxo-ada" value="${adaValue}" readonly>`;
+
+                    // Insert data into 3 columns
+                    row.insertCell(0).innerHTML = checkboxInput;
+                    row.insertCell(1).innerHTML = hashInput;
+                    row.insertCell(2).innerHTML = adaInput;
+                    
+                    totalAda += parseFloat(adaValue);
+                });
+
+                outputBox.value = `✅ Scan successful!\n- Found: ${utxos.length} UTXOs\n- Total wallet balance: ${totalAda.toFixed(6)} ADA\n\n👉 Please CHECK the UTXOs you want to use, then enter the send amount and receiver address.`;
+
+            } catch (error) {
+                outputBox.value = "❌ ERROR: " + error.message;
+            }
+        }
+
+        // --- GENERATE COMMAND ---
+        function generateCommand() {
+            let checkboxes = document.getElementsByClassName('utxo-checkbox'); // Get checkbox list
+            let hashes = document.getElementsByClassName('utxo-hash');
+            let adas = document.getElementsByClassName('utxo-ada');
+            let txInString = '';
+            let totalLovelace = 0;
+
+            for (let i = 0; i < hashes.length; i++) {
+                // ONLY PROCESS CHECKED UTXOS
+                if (checkboxes[i].checked) {
+                    let h = hashes[i].value.trim();
+                    let a = parseFloat(adas[i].value);
+                    if (h && !isNaN(a)) {
+                        txInString += `--tx-in ${h} `;
+                        totalLovelace += Math.round(a * 1000000);
+                    }
+                }
+            }
+
+            if (totalLovelace === 0) {
+                document.getElementById('outputBuild').value = "❌ You haven't selected any UTXO or the UTXO table is empty!";
+                return;
+            }
+
+            const receiver = document.getElementById('receiver').value.trim();
+            const sendAda = parseFloat(document.getElementById('sendAda').value);
+            const myAddress = document.getElementById('myAddress').value.trim();
+            
+            if (!receiver || isNaN(sendAda)) {
+                document.getElementById('outputBuild').value = "❌ Missing receiver address or amount!";
+                return;
+            }
+
+            const feeLovelace = 170000;
+            const sendLovelace = Math.round(sendAda * 1000000);
+            const changeLovelace = totalLovelace - sendLovelace - feeLovelace;
+
+            if (changeLovelace < 0) {
+                document.getElementById('outputBuild').value = `❌ ERROR: Selected UTXOs have insufficient funds!\nTotal selected UTXO balance: ${(totalLovelace/1000000).toFixed(6)} ADA\nAmount to send + Fee: ${((sendLovelace+feeLovelace)/1000000).toFixed(6)} ADA`;
+                return;
+            }
+
+            const cmd = `cardano-cli latest transaction build-raw ${txInString}--tx-out ${receiver}+${sendLovelace} --tx-out ${myAddress}+${changeLovelace} --fee ${feeLovelace} --out-file tx.raw`;
+            document.getElementById('outputBuild').value = `# Automatically calculated based on selected UTXOs:\n# Total Input: ${(totalLovelace/1000000).toFixed(6)} ADA\n# Change: ${(changeLovelace/1000000).toFixed(6)} ADA\n\n` + cmd;
+        }
+
+        // --- SUBMIT ROCKET ---
+        function hexToBytes(hex) {
+            let bytes = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+            return bytes;
+        }
+
+        async function submitToBlockfrost() {
+            const projectId = document.getElementById('projectId').value.trim();
+            const file = document.getElementById('fileInput').files[0];
+            const outputBox = document.getElementById('outputSubmit');
+
+            if (!projectId) { alert("⚠️ Missing Blockfrost Project ID!"); return; }
+            if (!file) { alert("⚠️ Missing uploaded tx.signed file!"); return; }
+            
+            outputBox.value = "🚀 Igniting... Submitting transaction to Blockchain...";
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const binaryData = hexToBytes(JSON.parse(e.target.result).cborHex);
+                    const response = await fetch("https://cardano-mainnet.blockfrost.io/api/v0/tx/submit", {
+                        method: "POST", 
+                        headers: { "project_id": projectId, "Content-Type": "application/cbor" }, 
+                        body: binaryData
+                    });
+                    
+                    const resultText = await response.text();
+                    if (response.ok) {
+                        outputBox.value = `🎯 SUCCESS! Your transaction hash is:\n${resultText.replace(/"/g, '')}\n\nYou can copy this hash and paste it on Cardanoscan to check.`;
+                    } else {
+                        outputBox.value = `❌ REJECTED:\n${resultText}`;
+                    }
+                } catch (err) {
+                    outputBox.value = "❌ File read or data submission error: " + err.message;
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
