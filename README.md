@@ -1,85 +1,40 @@
-🏗️ Nguyên lý hoạt động
-Công cụ này đóng vai trò là một "Trợ lý soạn thảo lệnh CLI". Thay vì phải tự tính toán UTXO, phí giao dịch (Fee) và tiền thừa (Change), công cụ này sẽ tự động soạn thảo đoạn mã cardano-cli hoàn chỉnh cho bạn.
-
-Tại Web (Local): Bạn nhập các thông số, công cụ tạo ra câu lệnh cardano-cli build-raw tương ứng.
-
-Tại máy Offline (CLI): Bạn copy câu lệnh đó, dán vào Terminal trên máy tính đã cài cardano-cli và chứa khóa bí mật để thực thi.
-
-📋 Hướng dẫn thực thi
-
-Bước 1: Tải file Tool-Cardano.html về máy cá nhân - > Truy cập mở Tool-Cardano.html
-
-Nhập các thông tin: Blockfrost Project ID,Địa chỉ ví CỦA BẠN, UTXO nguồn, địa chỉ ví nhận, số tiền.
-
-Nhấn "Tạo Lệnh Build-Raw". Một đoạn code CLI sẽ xuất hiện.
-
-Copy đoạn code đó.
-
-Bước 2: Chạy lệnh trên máy tính Offline
-Tại máy tính đã cài đặt cardano-cli và chứa file payment.skey:
-
-1. Mở Terminal và dán đoạn code vừa copy vào, sau đó nhấn Enter.
-Ví dụ đoạn lệnh bạn sẽ nhận được:
-
-cardano-cli transaction build-raw \
-    --tx-in [TX_ID_1] \
-    --tx-in [TX_ID_2] \
-    --tx-out [ADDR]+[AMOUNT] \
-    --fee [FEE] \
-    --out-file tx.raw
-
-2. Sau khi chạy xong, file tx.raw sẽ được tạo ra trong thư mục của bạn.
-
-Bước 3: Ký và Gửi giao dịch
-Sau khi đã có file tx.raw, bạn thực hiện tiếp 2 bước ký và gửi:
-
-Ký giao dịch:
-cardano-cli transaction sign --tx-body-file tx.raw --signing-key-file payment.skey --mainnet --out-file tx.signed
-
-Bước 4: sau khi có file chữ ký ở máy off Đẩy giao dịch lên Blockchain (Web Tool)
-Quay trở lại Web Tool:
-
-Chọn tính năng "Submit Transaction" (hoặc mục Upload file chữ ký).
-
-Tải file tx.signed (file chứa chữ ký bạn vừa tạo ở Bước 2) lên công cụ.
-
-Nhấn "Submit/Broadcast Transaction". Công cụ sẽ sử dụng Blockfrost API để đẩy giao dịch đã ký của bạn trực tiếp lên mạng lưới Cardano.
-
-🔑 Hướng dẫn lấy Blockfrost Project ID
-Để công cụ có thể truy xuất dữ liệu UTXO và gửi giao dịch, bạn cần một Project ID từ Blockfrost. Đây là dịch vụ cung cấp hạ tầng dữ liệu cho Cardano.
-
-Các bước thực hiện:
-
-Đăng ký tài khoản:
-
-Truy cập: https://blockfrost.io/
-
-Nhấn "Sign Up" và tạo tài khoản (bằng Email hoặc GitHub).
-
-Tạo Project mới:
-
-Sau khi đăng nhập, tại trang Dashboard, nhấn nút "Create project".
-
-Chọn mạng lưới: Mainnet (Để thực hiện giao dịch thực tế) hoặc Preprod/Preview (Nếu bạn chỉ muốn test thử).
-
-Sao chép Project ID:
-
-Sau khi tạo xong, một bảng thông tin sẽ hiện ra.
-
-Tại phần "Project ID", bạn sẽ thấy một chuỗi ký tự dài. Hãy Copy toàn bộ chuỗi đó.
-
-Sử dụng trong Tool:
-
-Quay lại công cụ Cardano Transaction Bridge của bạn.
-
-Dán chuỗi đã copy vào ô "Blockfrost Project ID".
-
+🏗️ Operating Principle
+This tool acts as a "CLI Command Builder Assistant". Instead of manually calculating UTXOs, transaction fees (Fee), and change amounts (Change), this tool will automatically draft the complete ⁠cardano-cli⁠ command code for you.
+ On Web (Local): You input the parameters, and the tool generates the corresponding ⁠cardano-cli build-raw⁠ command.
+ On Offline Machine (CLI): You copy that command and paste it into the Terminal on a computer that has ⁠cardano-cli⁠ installed and contains the secret key to execute it.
+📋 Execution Guide
+Step 1: Download and use the tool
+ Download the ⁠Tool-Cardano.html⁠ file to your personal computer and open it.
+ Enter the information: Blockfrost Project ID, YOUR wallet address, source UTXO, receiver wallet address, and the amount.
+ Click "Generate Build-Raw Command". A CLI code snippet will appear.
+ Copy that code snippet.
+Step 2: Run the command on the Offline computer
+On the computer that has ⁠cardano-cli⁠ installed and contains the ⁠payment.skey⁠ file:
+ Open Terminal, paste the code snippet you just copied, and press Enter.
+Example of the command you will receive:
+cardano-cli transaction build-raw \⁠
+⁠--tx-in [TX_ID_1] \⁠
+⁠--tx-in [TX_ID_2] \⁠
+⁠--tx-out [ADDR]+[AMOUNT] \⁠
+⁠--fee [FEE] \⁠
+⁠--out-file tx.raw⁠
+Once executed, the ⁠tx.raw⁠ file will be created in your directory.
+Step 3: Sign and Submit the transaction
+After obtaining the ⁠tx.raw⁠ file, proceed with the signing step:
+Sign the transaction:
+cardano-cli transaction sign --tx-body-file tx.raw --signing-key-file payment.skey --mainnet --out-file tx.signed⁠
+Step 4: Push the transaction to the Blockchain (Web Tool)
+After generating the signature file on your offline machine, return to the Web Tool:
+ Select the "Submit Transaction" feature (or the Signature File Upload section).
+ Upload the ⁠tx.signed⁠ file (the signature file you created in the previous step) to the tool.
+ Click "Submit/Broadcast Transaction". The tool will use the Blockfrost API to push your signed transaction directly to the Cardano network.
+🔑 How to get a Blockfrost Project ID
+For the tool to be able to retrieve UTXO data and submit transactions, you need a Project ID from Blockfrost. This is a service that provides data infrastructure for Cardano.
+Steps to perform:
+ Register an account: Visit https://blockfrost.io/ and click "Sign Up" to create an account (using Email or GitHub).
+ Create a new Project: After logging in, click the "Create project" button on the Dashboard page. Select the network: Mainnet (to perform real transactions) or Preprod/Preview (if you only want to test).
+ Copy the Project ID: After creation, an information panel will appear. In the "Project ID" section, copy the entire long string of characters.
+ Use it in the Tool: Return to your Cardano tool and paste the copied string into the "Blockfrost Project ID" box.
 If you find this tool helpful for securing your Cardano assets, consider supporting the development:
-
-Cardano (ADA): addr1q8myf69ztrw89fpv0l6tmgjt2p8kt59xygu0w30nv6rcpdfay2qfwe8zk0vefye4gw0v8nxxrnwpa8mlgzhuaqjqwffs2ru9mv
-
-![Mô tả ảnh](qr.png)
-
-Every contribution helps keep this project updated, secure, and free for everyone.
-
-[Tải xuống file tại đây](Tool-Cardano.html)
+Cardano (ADA): ⁠addr1q8myf69ztrw89fpv0l6tmgjt2p8kt59xygu0w30nv6rcpdfay2qfwe8zk0vefye4gw0v8nxxrnwpa8mlgzhuaqjqwffs2ru9mv⁠
+Every contribution helps keep this project updated, secure, and free for everyone
