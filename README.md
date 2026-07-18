@@ -1,7 +1,11 @@
 🏗️ Operating Principle
+
 This tool acts as a "CLI Command Builder Assistant". Instead of manually calculating UTXOs, transaction fees (Fee), and change amounts (Change), this tool will automatically draft the complete ⁠cardano-cli⁠ command code for you.
+
  On Web (Local): You input the parameters, and the tool generates the corresponding ⁠cardano-cli build-raw⁠ command.
+ 
  On Offline Machine (CLI): You copy that command and paste it into the Terminal on a computer that has ⁠cardano-cli⁠ installed and contains the secret key to execute it.
+ 
 📋 Execution Guide
 
 Step 1: Download and use the tool
@@ -37,10 +41,18 @@ After generating the signature file on your offline machine, return to the Web T
 For the tool to be able to retrieve UTXO data and submit transactions, you need a Project ID from Blockfrost. This is a service that provides data infrastructure for Cardano.
 Steps to perform:
 
- Register an account: Visit https://blockfrost.io/ and click "Sign Up" to create an account (using Email or GitHub).
+ Register an account: 
+ 
+ Visit https://blockfrost.io/ and click "Sign Up" to create an account (using Email or GitHub).
+ 
  Create a new Project: After logging in, click the "Create project" button on the Dashboard page. Select the network: Mainnet (to perform real transactions) or Preprod/Preview (if you only want to test).
+ 
  Copy the Project ID: After creation, an information panel will appear. In the "Project ID" section, copy the entire long string of characters.
+ 
  Use it in the Tool: Return to your Cardano tool and paste the copied string into the "Blockfrost Project ID" box.
+ 
 If you find this tool helpful for securing your Cardano assets, consider supporting the development:
+
 Cardano (ADA): ⁠addr1q8myf69ztrw89fpv0l6tmgjt2p8kt59xygu0w30nv6rcpdfay2qfwe8zk0vefye4gw0v8nxxrnwpa8mlgzhuaqjqwffs2ru9mv⁠
+
 Every contribution helps keep this project updated, secure, and free for everyone
